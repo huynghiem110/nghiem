@@ -1,0 +1,10 @@
+{
+    "text": "Choose PDF Files",
+    "bg": "#4CAF50",
+    "fg": "#FFFFFF",
+    "font": ["Helvetica", 14, "bold"],
+    "borderwidth": 2,
+    "relief": "raised",
+    "padx": 20,
+    "pady": 10
+}
