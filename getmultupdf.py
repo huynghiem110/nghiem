@@ -5,10 +5,22 @@ from PyPDF2 import PdfReader
 import json
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import Settings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-Settings.embed_model = HuggingFaceEmbedding(
-    model_name="hkunlp/instructor-xl"
-)
+
+def get_text_chunks(text):
+    text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    length_function=len,
+    is_separator_regex=False,
+    )
+    chunks = text_splitter.create_documents([text])
+    print(chunks[0])
+    print(chunks[1])
+    return chunks
+
+
 
 def get_pdf_text(pdf_docs):
     # Initialize the PdfReader with the provided PDF file
@@ -17,7 +29,7 @@ def get_pdf_text(pdf_docs):
     # Iterate over all the pages and extract text
     for page in reader.pages:
         text += page.extract_text()
-    
+
     return text
 
 def select_and_process_files():
@@ -28,7 +40,18 @@ def select_and_process_files():
         # Process each selected PDF file
         for file_path in file_paths:
             text = get_pdf_text(file_path)
-            # print(f"Text from {os.path.basename(file_path)}:\n{text}\n{'-'*40}\n")
+            text_chunks = get_text_chunks(text)
+
+            embed_model = HuggingFaceEmbedding(
+            model_name="hkunlp/instructor-xl"
+            )
+            # Create an array of text to embed
+            context_array = []
+            for i, row in enumerate(text_chunks):
+                context_array.append(row.page_content)
+            embeddings = [embed_model.get_text_embedding(chunk) for chunk in context_array]
+            # embeddings = embed_model.get_text_embedding(context_array)
+            # print(embeddings[:5])
 # Load button style from JSON file
 with open('button_style.json', 'r') as style_file:
     button_style = json.load(style_file)
